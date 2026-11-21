@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: two-tier-app
-          image: trainwithshubham/two-tier-flask-app:latest
+          image: akhilesh-singh-official/two-tier-flask-app:latest
           env:
             - name: MYSQL_HOST
               value: mysql          # DNS name of the mysql Service (resolved by cluster DNS)
