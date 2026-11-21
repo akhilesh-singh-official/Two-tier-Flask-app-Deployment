@@ -7,7 +7,7 @@ Elastic Beanstalk is a powerful PaaS: you hand it your application and it create
 | Standard Mode | one file, `beanstalk/docker-compose.yml` | MySQL container next to the app, on the same instance |
 | Cluster Mode | nothing, you point it at the Docker Hub image | Amazon RDS for MySQL |
 
-Both modes use the public image `trainwithshubham/two-tier-flask-app` on Docker Hub, built for linux/amd64 and linux/arm64. The app listens on port 5000 and reads its database settings from environment variables.
+Both modes use the public image `akhilesh-singh-official/two-tier-flask-app` on Docker Hub, built for linux/amd64 and linux/arm64. The app listens on port 5000 and reads its database settings from environment variables.
 
 | Variable | Meaning |
 |---|---|
