@@ -11,7 +11,7 @@ DB_USER="admin"
 DB_PASSWORD="REPLACE_WITH_DB_PASSWORD" # demo only! see "Going further" in aws/README.md
 AWS_REGION="ap-south-1"
 
-IMAGE="trainwithshubham/two-tier-flask-app:latest"
+IMAGE="akhilesh-singh-official/two-tier-flask-app:latest"
 LOG_GROUP="/two-tier-flask-app"
 
 exec > >(tee /var/log/user-data.log) 2>&1
