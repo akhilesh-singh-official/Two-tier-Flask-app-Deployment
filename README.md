@@ -17,12 +17,7 @@ Stack: Python 3.13, Flask 3.1, gunicorn, PyMySQL, MySQL 8.4.
 
 ## Run with Docker Compose
 
-1. Clone and enter the repo:
-
-   ```bash
-   git clone https://github.com/LondheShubham153/two-tier-flask-app.git
-   cd two-tier-flask-app
-   ```
+1. Clone and enter this repo:
 
 2. (Optional) set your own database credentials. Without a `.env` file the defaults in `docker-compose.yml` are used.
 
