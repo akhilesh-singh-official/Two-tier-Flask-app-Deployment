@@ -62,7 +62,7 @@ The RDS security group must accept traffic from the Beanstalk environment on por
 ### 3. Create the environment
 
 1. Create a Web server environment on the Docker platform in Cluster Mode and choose to run a prebuilt image.
-2. Use the image `trainwithshubham/two-tier-flask-app:1.0.0`.
+2. Use the image `akhilesh-singh-official/two-tier-flask-app:1.0.0`.
 3. Set the service port to 5000, the port the app listens on in the container.
 4. Set the health check path to `/health` if the setup asks for one.
 5. Use the same VPC as the database and place the instances in subnets that can reach it.
