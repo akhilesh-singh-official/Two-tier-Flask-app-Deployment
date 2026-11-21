@@ -1,117 +1,306 @@
-# Flask App with MySQL Docker Setup
+# Dockerized Two-Tier Flask Application with Kubernetes on AWS
 
-A small two-tier app: a Flask web app that stores messages in MySQL. Submit a message in the form; it is saved in the database and listed on the page.
+A containerized two-tier web application built using **Python Flask, MySQL, Docker, Docker Compose, and Kubernetes**, with cloud deployment on AWS.
 
-Stack: Python 3.13, Flask 3.1, gunicorn, PyMySQL, MySQL 8.4.
+This project demonstrates application containerization, multi-container orchestration, database persistence, Kubernetes deployment, and cloud infrastructure management.
 
-| Route | What it does |
-|---|---|
-| `GET /` | Lists all messages and shows which server answered |
-| `POST /submit` | Saves `new_message` (form field), returns it as JSON |
-| `GET /health` | Returns `{"status":"ok"}` (no database call), used by health checks |
+The application consists of two independent tiers:
 
-## Prerequisites
+- **Application Tier:** Python Flask application served using Gunicorn.
+- **Database Tier:** MySQL database responsible for storing application data.
 
-- Docker with the Compose plugin (`docker compose`)
-- Git (optional, for cloning the repository)
+The application can be run using Docker Compose and deployed using Kubernetes manifests.
 
-## Run with Docker Compose
+## Architecture
 
-1. Clone and enter this repo:
+The project follows a two-tier architecture with separate application and database components.
 
-2. (Optional) set your own database credentials. Without a `.env` file the defaults in `docker-compose.yml` are used.
+### Application Architecture
 
-   ```bash
-   cp .env.example .env   # then edit the passwords
-   ```
-
-3. Start everything:
-
-   ```bash
-   docker compose up --build
-   ```
-
-4. Open http://localhost:5000, send a few messages. The `messages` table is created automatically.
-
-   > On macOS, port 5000 may already be used by *AirPlay Receiver*. Turn it off in System Settings, or change the left side of `"5000:5000"` in `docker-compose.yml`.
-
-5. Stop and remove the containers (`-v` also deletes the database volume):
-
-   ```bash
-   docker compose down        # keep data
-   docker compose down -v     # delete data too
-   ```
-
-`make build`, `make run`, `make stop`, `make test` and `make clean` are shortcuts for the common commands.
-
-## Run without Docker Compose
-
-1. Build the image and create a network:
-
-   ```bash
-   docker build -t flaskapp .
-   docker network create twotier
-   ```
-
-2. Start MySQL:
-
-   ```bash
-   docker run -d \
-       --name mysql \
-       -v mysql-data:/var/lib/mysql \
-       --network=twotier \
-       -e MYSQL_DATABASE=mydb \
-       -e MYSQL_ROOT_PASSWORD=admin \
-       -p 3306:3306 \
-       mysql:8.4
-   ```
-
-3. Start the app (wait a few seconds for MySQL to be ready first):
-
-   ```bash
-   docker run -d \
-       --name flaskapp \
-       --network=twotier \
-       -e MYSQL_HOST=mysql \
-       -e MYSQL_USER=root \
-       -e MYSQL_PASSWORD=admin \
-       -e MYSQL_DB=mydb \
-       -p 5000:5000 \
-       flaskapp:latest
-   ```
-
-## Configuration
-
-The app reads its database settings from environment variables:
-
-| Variable | Default |
-|---|---|
-| `MYSQL_HOST` | `localhost` |
-| `MYSQL_PORT` | `3306` |
-| `MYSQL_USER` | `default_user` |
-| `MYSQL_PASSWORD` | `default_password` |
-| `MYSQL_DB` | `default_db` |
-| `FLASK_DEBUG` | off (`1` enables debug when running `python app.py`) |
-
-## Tests
-
-```bash
-pip install -r requirements-dev.txt
-pytest
+```text
+                  User
+                   |
+                   v
+              AWS EC2
+                   |
+                   v
+             Docker Network
+                   |
+          +--------+--------+
+          |                 |
+          v                 v
+     Flask App           MySQL
+     Container           Container
+          |                 |
+          +-----------------+
+                            |
+                            v
+                      Docker Volume
+                     Persistent Data
 ```
 
-## What's in the repo
+### Kubernetes Architecture
 
-| Path | Purpose |
+```text
+                  User
+                   |
+                   v
+             Kubernetes
+                Cluster
+                   |
+                   v
+             Application
+                Service
+                   |
+                   v
+           Flask Deployment
+                   |
+                   v
+             MySQL Service
+                   |
+                   v
+             MySQL Deployment
+                   |
+                   v
+             Persistent Storage
+```
+
+*The Kubernetes architecture represents the intended application and database deployment topology. Actual ingress, service types, replicas and storage configuration depend on the deployed manifests.*
+
+## Technology Stack
+
+| Technology | Purpose |
 |---|---|
-| `Dockerfile`, `Dockerfile-multistage` | Container images (the second shows the multi-stage pattern) |
-| `docker-compose.yml`, `Makefile` | Local run |
-| `Jenkinsfile` | CI/CD pipeline |
-| `beanstalk/` | Run the app on AWS Elastic Beanstalk (compose file for Standard Mode, Docker Hub image plus RDS for Cluster Mode) |
-| `k8s/`, `eks-manifests/` | Kubernetes manifests (kubeadm cluster / Amazon EKS) |
-| **`aws/`** | **Step-by-step guide to run this app on AWS: VPC, EC2, RDS, ALB, Auto Scaling, CloudWatch** |
+| Python | Application development |
+| Flask | Web application framework |
+| MySQL | Relational database |
+| Gunicorn | Production WSGI server |
+| Docker | Application containerization |
+| Docker Compose | Multi-container orchestration |
+| Kubernetes | Container orchestration |
+| kubectl | Kubernetes cluster management |
+| AWS EC2 | Cloud deployment |
+| AWS EKS | Managed Kubernetes, if used |
+| Linux | Server environment |
+| Git & GitHub | Version control |
 
-## Notes
+## Project Structure
 
-- This is a demo setup. For production use real secrets management, TLS and backups.
-- If something fails, check `docker compose logs`.
+```text
+two-tier-flask-app/
+│
+├── app.py
+├── Dockerfile
+├── Dockerfile.multistage
+├── docker-compose.yml
+├── requirements.txt
+├── Makefile
+├── .dockerignore
+├── .env.example
+│
+├── tests/
+│
+├── jenkins/
+│
+├── kubernetes/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   ├── secret.yaml
+│   └── storage.yaml
+│
+├── aws/
+│
+├── elastic-beanstalk/
+│
+└── README.md
+```
+
+*Update the Kubernetes filenames above to match the actual files in your repository.*
+
+## Application Workflow
+
+1. Users access the Flask web application.
+2. Flask processes incoming HTTP requests.
+3. The application communicates with MySQL through an internal service or Docker network.
+4. MySQL stores application data using persistent storage.
+5. Docker Compose manages the application and database containers during local deployment.
+6. Kubernetes manages application workloads, services and storage during Kubernetes deployment.
+
+## Key Features
+
+- **Containerized application:** Flask and MySQL run in separate containers.
+- **Multi-container orchestration:** Docker Compose manages application services.
+- **Kubernetes deployment:** Kubernetes manifests define application and database workloads.
+- **Persistent storage:** Docker volumes and Kubernetes persistent storage provide database data persistence.
+- **Service communication:** Application and database communicate over internal networks.
+- **Health checks:** Container health checks help monitor service readiness.
+- **Production application server:** Gunicorn serves the Flask application.
+- **Non-root execution:** Application container uses a non-root user.
+- **Environment-based configuration:** Application and database settings are externally configurable.
+- **Multi-stage Docker build:** An alternative Dockerfile demonstrates multi-stage image building.
+
+## Docker Compose Deployment
+
+### Prerequisites
+
+- Docker Engine
+- Docker Compose plugin
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/akhilesh-singh-official/two-tier-flask-app.git
+
+cd two-tier-flask-app
+```
+
+### 2. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Update the database credentials in `.env`.
+
+Never commit actual credentials to GitHub.
+
+### 3. Build and start containers
+
+```bash
+docker compose up -d --build
+```
+
+### 4. Verify containers
+
+```bash
+docker compose ps
+```
+
+### 5. View logs
+
+```bash
+docker compose logs -f
+```
+
+### 6. Access the application
+
+```text
+http://localhost:5000
+```
+
+Use the application port configured in Docker Compose.
+
+## Kubernetes Deployment
+
+The project also includes Kubernetes configurations for deploying the application in a Kubernetes environment.
+
+### Kubernetes Concepts
+
+- **Deployments:** Manage application and database workloads.
+- **Services:** Enable internal communication between application components.
+- **ConfigMaps:** Manage non-sensitive application configuration.
+- **Secrets:** Manage sensitive configuration.
+- **Persistent Volumes and Claims:** Provide persistent database storage.
+
+### Deployment Workflow
+
+1. Build the Flask application Docker image.
+2. Push the image to a container registry.
+3. Configure Kubernetes manifests.
+4. Apply the required Kubernetes resources.
+5. Deploy application and database workloads.
+6. Verify pods, deployments and services.
+7. Access the application through the configured service or ingress.
+
+### Useful Kubernetes Commands
+
+```bash
+# Check cluster connectivity
+kubectl get nodes
+
+# Apply Kubernetes configurations
+kubectl apply -f kubernetes/
+
+# Check pods
+kubectl get pods
+
+# Check deployments
+kubectl get deployments
+
+# Check services
+kubectl get services
+
+# Check persistent volume claims
+kubectl get pvc
+
+# View application logs
+kubectl logs <pod-name>
+```
+
+*Apply resources in dependency order if your manifests require it. Adjust paths and commands to match your actual Kubernetes configuration.*
+
+## AWS Deployment
+
+The application can be deployed on AWS infrastructure.
+
+### EC2 Deployment
+
+1. Launch an EC2 Linux instance.
+2. Configure security groups.
+3. Install Docker and Docker Compose.
+4. Clone the repository.
+5. Configure application environment variables.
+6. Build and run the application.
+7. Access the application using the EC2 public address and configured port.
+
+### EKS Deployment
+
+If using Amazon EKS, the Kubernetes deployment can run on an AWS-managed Kubernetes control plane.
+
+The deployment workflow includes:
+
+1. Configure AWS CLI and cluster access.
+2. Connect kubectl to the EKS cluster.
+3. Push the application image to a container registry such as Amazon ECR.
+4. Apply Kubernetes manifests.
+5. Verify workloads and services.
+6. Access the application through the configured exposure mechanism.
+
+## Security Considerations
+
+- Keep database services on private networks.
+- Avoid exposing MySQL directly to the internet.
+- Use environment variables or secure secret management.
+- Run application containers as non-root users.
+- Apply least-privilege access to AWS resources.
+- Restrict inbound traffic through security groups.
+- Scan container images for known vulnerabilities.
+- Avoid committing `.env` files and credentials.
+
+## What I Learned
+
+Through this project, I gained practical experience with:
+
+- Containerizing Python applications using Docker.
+- Managing multi-container applications with Docker Compose.
+- Understanding two-tier application architecture.
+- Configuring Docker networking and persistent volumes.
+- Deploying applications using Kubernetes.
+- Managing Kubernetes workloads, services and storage.
+- Running Flask applications using Gunicorn.
+- Deploying containerized workloads on AWS.
+- Understanding application configuration and container security.
+
+## Author
+
+**Akhilesh Singh**
+
+DevOps | Cloud Infrastructure | Containerization
+
+GitHub: [akhilesh-singh-official](https://github.com/akhilesh-singh-official)
+
+---
+
+*This project is part of my hands-on DevOps journey, focused on building, deploying, securing, and managing containerized applications using modern cloud and orchestration technologies.*
